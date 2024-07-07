@@ -1,6 +1,46 @@
+"use client"
 import Head from 'next/head'
+import { useRef, useState } from 'react'
+import useSWR from "swr";
 
 export default function Home () {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [shortURL, setShortURL] = useState('')
+
+
+  const handleSubmit = (e:any) => {
+    e.preventDefault();
+    const url = inputRef.current?.value;
+
+    if (!url) {
+      console.error('URL input is empty');
+      return;
+    }
+
+    console.log(url);
+
+    fetch('/api', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log(data.shortURL);
+        setShortURL(data.shortURL);
+      })
+      .catch((error) => {
+        console.error('There has been a problem with your fetch operation:', error);
+      });
+  };
+  
   return (
     <div className="min-h-screen p-2 flex flex-col justify-center items-center h-screen">
       <Head>
@@ -19,11 +59,14 @@ export default function Home () {
         </p>
 
         <div className="flex items-center justify-center flex-wrap max-w-2xl mt-12 w-full flex-col sm:flex-row">
-          <form className="m-4 p-6 text-left text-inherit no-underline border border-solid border-gray-300 rounded-xl transition-colors duration-150 ease-in-out hover:text-blue-500 hover:border-blue-500 w-full sm:w-auto">
-            <input type='text' className="m-0.5 text-2xl p-4 border border-gray-300 rounded" placeholder='URL' />
+          <form className="m-4 p-6 text-left text-inherit no-underline border border-solid border-gray-300 rounded-xl transition-colors duration-150 ease-in-out hover:text-blue-500 hover:border-blue-500 w-full sm:w-auto"
+            onSubmit={handleSubmit}
+          >
+            <input type='text' className="m-0.5 text-2xl p-4 border border-gray-300 rounded" placeholder='URL' ref={inputRef}/>
             <button className="m-0.5 text-2xl p-4 bg-blue-500 text-white rounded hover:bg-blue-600">
               Acorta
             </button>
+            <span className="m-0.5 text-2xl p-4">{shortURL}</span>
           </form>
         </div>
       </main>
